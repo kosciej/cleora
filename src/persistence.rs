@@ -13,8 +13,8 @@ pub mod entity {
         entity_mappings: RwLock<FxHashMap<u64, String>>,
     }
 
-    impl InMemoryEntityMappingPersistor {
-        pub fn new() -> Self {
+    impl Default for InMemoryEntityMappingPersistor {
+        fn default() -> Self {
             InMemoryEntityMappingPersistor {
                 entity_mappings: RwLock::new(FxHashMap::default()),
             }
@@ -84,8 +84,8 @@ pub mod sparse_matrix {
         entries: Vec<Entry>,
     }
 
-    impl InMemorySparseMatrixPersistor {
-        pub fn new() -> Self {
+    impl Default for InMemorySparseMatrixPersistor {
+        fn default() -> Self {
             InMemorySparseMatrixPersistor {
                 entity_count: 0,
                 edge_count: 0,
