@@ -54,8 +54,8 @@ pub mod sparse_matrix {
     pub trait SparseMatrixPersistor {
         fn increment_hash_occurrence(&mut self, hash: u64) -> u32;
         fn get_hash_occurrence(&self, hash: u64) -> u32;
-        fn get_id(&self, hash: u64) -> i32;
-        fn get_hash(&self, id: u32) -> i64;
+        fn get_id(&self, hash: u64) -> Option<i32>;
+        fn get_hash(&self, id: u32) -> Option<i64>;
         fn get_entity_counter(&self) -> u32;
         fn update_entity_counter(&mut self, val: u32);
         fn add_hash_id(&mut self, hash: u64, id: u32);
@@ -110,18 +110,12 @@ pub mod sparse_matrix {
             *self.hash_2_count.get(&hash).unwrap()
         }
 
-        fn get_id(&self, hash: u64) -> i32 {
-            match self.hash_2_id.get(&hash) {
-                Some(value) => *value as i32,
-                None => -1i32,
-            }
+        fn get_id(&self, hash: u64) -> Option<i32> {
+            self.hash_2_id.get(&hash).map(|value| *value as i32)
         }
 
-        fn get_hash(&self, id: u32) -> i64 {
-            match self.id_2_hash.get(&id) {
-                Some(value) => *value as i64,
-                None => -1i64,
-            }
+        fn get_hash(&self, id: u32) -> Option<i64> {
+            self.id_2_hash.get(&id).map(|value| *value as i64)
         }
 
         fn get_entity_counter(&self) -> u32 {

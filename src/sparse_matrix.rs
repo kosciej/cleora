@@ -136,15 +136,14 @@ where
     }
 
     fn get_or_create_id(&mut self, hash: u64) -> u32 {
-        let res = self.sparse_matrix_persistor.get_id(hash);
-        if res == -1 {
-            let entity_count = self.sparse_matrix_persistor.get_entity_counter();
-            self.sparse_matrix_persistor.add_hash_id(hash, entity_count);
-            self.sparse_matrix_persistor
-                .update_entity_counter(entity_count + 1);
-            entity_count
-        } else {
-            res as u32
+        match self.sparse_matrix_persistor.get_id(hash) {
+            Some(res) => res as u32,
+            None => {
+                let entity_count = self.sparse_matrix_persistor.get_entity_counter();
+                self.sparse_matrix_persistor.add_hash_id(hash, entity_count);
+                self.sparse_matrix_persistor.update_entity_counter(entity_count + 1);
+                entity_count
+            }
         }
     }
 

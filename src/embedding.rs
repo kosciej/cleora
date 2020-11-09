@@ -65,10 +65,8 @@ where
             .map(|i| {
                 let mut col: Vec<f32> = Vec::with_capacity(entities_count as usize);
                 for j in 0..entities_count {
-                    let hsh = self.sparse_matrix_persistor.get_hash(j);
-                    if hsh != -1 {
-                        let col_value =
-                            ((hash(hsh + (i as i64)) % max_hash) as f32) / max_hash_float;
+                    if let Some(hsh) = self.sparse_matrix_persistor.get_hash(j) {
+                        let col_value = ((hash(hsh + (i as i64)) % max_hash) as f32) / max_hash_float;
                         col.insert(j as usize, col_value);
                     }
                 }
@@ -179,20 +177,21 @@ where
         embedding_persistor.put_metadata(entities_count, self.dimension);
 
         for i in 0..entities_count {
-            let hash = self.sparse_matrix_persistor.get_hash(i);
-            let entity_name_opt = entity_mapping_persistor.get_entity(hash as u64);
-            if let Some(entity_name) = entity_name_opt {
-                let hash_occur = self
-                    .sparse_matrix_persistor
-                    .get_hash_occurrence(hash as u64);
-                let mut embedding: Vec<f32> = Vec::with_capacity(self.dimension as usize);
-                for j in 0..(self.dimension as usize) {
-                    let col: &Vec<f32> = res.get(j).unwrap();
-                    let value = col.get(i as usize).unwrap();
-                    embedding.insert(j, *value);
-                }
-                embedding_persistor.put_data(entity_name, hash_occur, embedding);
-            };
+            if let Some(hash) = self.sparse_matrix_persistor.get_hash(i) {
+                let entity_name_opt = entity_mapping_persistor.get_entity(hash as u64);
+                if let Some(entity_name) = entity_name_opt {
+                    let hash_occur = self
+                        .sparse_matrix_persistor
+                        .get_hash_occurrence(hash as u64);
+                    let mut embedding: Vec<f32> = Vec::with_capacity(self.dimension as usize);
+                    for j in 0..(self.dimension as usize) {
+                        let col: &Vec<f32> = res.get(j).unwrap();
+                        let value = col.get(i as usize).unwrap();
+                        embedding.insert(j, *value);
+                    }
+                    embedding_persistor.put_data(entity_name, hash_occur, embedding);
+                };
+            }
         }
 
         embedding_persistor.finish();
@@ -275,8 +274,7 @@ where
                 // i - number of dimension
                 // chunk - column/vector of bytes
                 for j in 0..entities_count as usize {
-                    let hsh = self.sparse_matrix_persistor.get_hash(j as u32);
-                    if hsh != -1 {
+                    if let Some(hsh) = self.sparse_matrix_persistor.get_hash(j as u32) {
                         let col_value =
                             ((hash(hsh + (i as i64)) % max_hash) as f32) / max_hash_float;
 
@@ -426,26 +424,27 @@ where
         embedding_persistor.put_metadata(entities_count, self.dimension);
 
         for i in 0..entities_count {
-            let hash = self.sparse_matrix_persistor.get_hash(i);
-            let entity_name_opt = entity_mapping_persistor.get_entity(hash as u64);
-            if let Some(entity_name) = entity_name_opt {
-                let hash_occur = self
-                    .sparse_matrix_persistor
-                    .get_hash_occurrence(hash as u64);
-                let mut embedding: Vec<f32> = Vec::with_capacity(self.dimension as usize);
-                for j in 0..(self.dimension as usize) {
-                    let start_idx = ((j * entities_count as usize) + i as usize) * 4;
-                    let end_idx = start_idx + 4;
-                    let pointer: *const u8 = (&res[start_idx..end_idx]).as_ptr();
-                    let value = unsafe {
-                        let value = pointer as *const f32;
-                        *value
-                    };
+            if let Some(hash) = self.sparse_matrix_persistor.get_hash(i) {
+                let entity_name_opt = entity_mapping_persistor.get_entity(hash as u64);
+                if let Some(entity_name) = entity_name_opt {
+                    let hash_occur = self
+                        .sparse_matrix_persistor
+                        .get_hash_occurrence(hash as u64);
+                    let mut embedding: Vec<f32> = Vec::with_capacity(self.dimension as usize);
+                    for j in 0..(self.dimension as usize) {
+                        let start_idx = ((j * entities_count as usize) + i as usize) * 4;
+                        let end_idx = start_idx + 4;
+                        let pointer: *const u8 = (&res[start_idx..end_idx]).as_ptr();
+                        let value = unsafe {
+                            let value = pointer as *const f32;
+                            *value
+                        };
 
-                    embedding.insert(j, value);
-                }
-                embedding_persistor.put_data(entity_name, hash_occur, embedding);
-            };
+                        embedding.insert(j, value);
+                    }
+                    embedding_persistor.put_data(entity_name, hash_occur, embedding);
+                };
+            }
         }
 
         embedding_persistor.finish();
