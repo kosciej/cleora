@@ -304,7 +304,7 @@ mod tests {
         let lengths_and_offsets = prepare_lengths_and_offsets(&[2, 1, 3]);
 
         let cartesian_product = CartesianProduct::new(lengths_and_offsets);
-        let mut iter = cartesian_product.into_iter();
+        let mut iter = cartesian_product;
 
         assert_eq!(Some(smallvec![0, 2, 3]), iter.next());
         assert_eq!(Some(smallvec![0, 2, 4]), iter.next());
@@ -335,7 +335,7 @@ mod tests {
         let in_memory_entity_mapping_persistor = Arc::new(in_memory_entity_mapping_persistor);
         let entity_processor = EntityProcessor::new(
             &dummy_config,
-            in_memory_entity_mapping_persistor.clone(),
+            in_memory_entity_mapping_persistor,
             |_hashes| {},
         );
 
@@ -422,7 +422,7 @@ mod tests {
             SmallVec::new();
         let mut entity_processor = EntityProcessor::new(
             &dummy_config,
-            in_memory_entity_mapping_persistor.clone(),
+            in_memory_entity_mapping_persistor,
             |hashes| {
                 result.push(hashes);
             },
